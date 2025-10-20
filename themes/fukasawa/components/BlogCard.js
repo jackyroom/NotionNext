@@ -12,54 +12,20 @@ import TagItemMini from './TagItemMini'
  * @returns
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
-  const { siteInfo } = useGlobal()
-  const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
-  
-  // 完全保持原有逻辑，只在这里添加图片提取功能
-  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCover) {
-    // 新增：提取文章内容中的第一张图片
-    const extractFirstImage = () => {
-      if (!post) return null
-      
-      // 从blockMap中提取图片
-      if (post.blockMap) {
-        try {
-          const blocks = Object.values(post.blockMap).flat()
-          const imageBlock = blocks.find(block => 
-            block.value?.type === 'image'
-          )
-          if (imageBlock?.value?.properties?.source?.[0]?.[0]) {
-            return imageBlock.value.properties.source[0][0]
-          }
-          if (imageBlock?.value?.format?.display_source) {
-            return imageBlock.value.format.display_source
-          }
-        } catch (e) {
-          console.log('从blockMap提取图片失败')
-        }
-      }
-      
-      // 从summary中提取图片URL
-      if (post.summary) {
-        const imgMatch = post.summary.match(/https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/i)
-        if (imgMatch) {
-          return imgMatch[0]
-        }
-      }
-      
-      return null
-    }
-    
-    // 尝试提取第一张图片
-    const firstImage = extractFirstImage()
-    if (firstImage) {
-      post.pageCoverThumbnail = firstImage
-    } else {
-      post.pageCoverThumbnail = siteInfo?.pageCover
-    }
+const {siteInfo} =useGlobal()
+  const showPreview =
+    siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
+  // fukasawa 强制显示图片
+  if (
+    siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) &&
+    post &&
+    !post.pageCover
+  ) {
+    post.pageCoverThumbnail = siteInfo?.pageCover
   }
-
-  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && post?.pageCoverThumbnail
+  const showPageCover =
+    siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) &&
+    post?.pageCoverThumbnail
     
   const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
     'FUKASAWA_POST_LIST_ANIMATION',
