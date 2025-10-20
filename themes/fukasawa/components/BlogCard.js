@@ -13,54 +13,72 @@ import TagItemMini from './TagItemMini'
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
   const { siteInfo } = useGlobal()
-
-  // 简化版：直接从内容中提取第一张图片
-  const extractFirstImage = (content) => {
-    if (!content) return null
-    const imgRegex = /https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/i
-    const match = content.match(imgRegex)
-    return match ? match[0] : null
-  }
-
-  // 修改封面图来源
-  let coverImage = post?.pageCoverThumbnail
-  if (!coverImage && post) {
-    // 尝试从摘要中提取
-    coverImage = extractFirstImage(post.summary)
-    // 如果摘要中没有，尝试从内容中提取
-    if (!coverImage && post.content) {
-      coverImage = extractFirstImage(post.content)
-    }
-    // 如果都没有，使用默认封面
-    if (!coverImage) {
-      coverImage = siteInfo?.pageCover
-    }
-  }
-
-  // 强制显示封面逻辑
-  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCoverThumbnail) {
-    post.pageCoverThumbnail = coverImage
-  }
-
-  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && coverImage
   
-  // 在渲染部分使用 coverImage
+  // 新增：简单的图片提取函数
+  const getFirstImageFromPost = (post) => {
+    if (!post) return null
+    try {
+      // 从摘要中提取图片URL
+      if (post.summary) {
+        const imgMatch = post.summary.match(/https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/i)
+        if (imgMatch) return imgMatch[0]
+      }
+      return null
+    } catch (error) {
+      console.error('提取图片错误:', error)
+      return null
+    }
+  }
+
+  const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
+  
+  // 原始逻辑保持不变，只在这里添加提取功能
+  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCoverThumbnail) {
+    // 先尝试提取文章中的图片
+    const firstImage = getFirstImageFromPost(post)
+    if (firstImage) {
+      post.pageCoverThumbnail = firstImage
+    } else {
+      post.pageCoverThumbnail = siteInfo?.pageCover
+    }
+  }
+
+  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && post?.pageCoverThumbnail
+  
+  // 其余代码完全保持原样...
+  const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
+    'FUKASAWA_POST_LIST_ANIMATION',
+    null,
+    CONFIG
+  ) || showAnimate 
+
+  const aosProps = FUKASAWA_POST_LIST_ANIMATION ? {
+    'data-aos': 'fade-up',
+    'data-aos-duration': '300',
+    'data-aos-once': 'true', 
+    'data-aos-anchor-placement': 'top-bottom'
+  } : {}
+
   return (
-    <article {...aosProps}>
+    <article
+      {...aosProps}
+      style={{ maxHeight: '60rem' }}
+      className='w-full lg:max-w-sm p-3 shadow mb-4 mx-2 bg-white dark:bg-hexo-black-gray hover:shadow-lg duration-200'>
       <div className='flex flex-col justify-between h-full'>
+        {/* 封面图部分保持原样 */}
         {showPageCover && (
-          <SmartLink href={post?.href}>
+          <SmartLink href={post?.href} passHref legacyBehavior>
             <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
               <LazyImage
-                src={coverImage}  // 使用提取的图片
-                alt={post?.title}
+                src={post?.pageCoverThumbnail}
+                alt={post?.title || siteConfig('TITLE')}
                 className='object-cover w-full h-full hover:scale-125 transform duration-500'
               />
             </div>
           </SmartLink>
         )}
 
-        {/* 文字部分 */}
+        {/* 其余代码完全保持原样 */}
         <div className='flex flex-col w-full'>
           <h2>
             <SmartLink
@@ -80,7 +98,6 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
             </main>
           )}
 
-          {/* 分类标签 */}
           <div className='mt-auto justify-between flex'>
             {post.category && (
               <SmartLink
