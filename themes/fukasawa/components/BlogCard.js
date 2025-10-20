@@ -12,47 +12,20 @@ import TagItemMini from './TagItemMini'
  * @returns
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
-  const { siteInfo } = useGlobal()
-  const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
-  
-  // 完全保持原有逻辑，只在这里添加图片提取功能
-  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCover) {
-    
-    // 新增：直接从blockMap中提取第一张图片
-    const getFirstImageFromBlockMap = () => {
-      if (!post?.blockMap) return null
-      
-      try {
-        // 遍历所有block，找到第一个图片block
-        for (const blockId in post.blockMap) {
-          const block = post.blockMap[blockId]
-          if (block?.value?.type === 'image') {
-            const imageUrl = block.value?.properties?.source?.[0]?.[0] || 
-                           block.value?.format?.display_source
-            if (imageUrl && !imageUrl.includes('page-cover')) {
-              console.log('找到文章图片:', imageUrl) // 调试用
-              return imageUrl
-            }
-          }
-        }
-      } catch (e) {
-        console.log('提取图片出错:', e)
-      }
-      return null
-    }
-
-    // 尝试提取文章第一张图片
-    const firstImage = getFirstImageFromBlockMap()
-    if (firstImage) {
-      // 直接替换封面为文章第一张图片
-      post.pageCoverThumbnail = firstImage
-    } else {
-      // 如果提取失败，使用原来的默认封面
-      post.pageCoverThumbnail = siteInfo?.pageCover
-    }
+const {siteInfo} =useGlobal()
+  const showPreview =
+    siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
+  // fukasawa 强制显示图片
+  if (
+    siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) &&
+    post &&
+    !post.pageCover
+  ) {
+    post.pageCoverThumbnail = siteInfo?.pageCover
   }
-
-  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && post?.pageCoverThumbnail
+  const showPageCover =
+    siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) &&
+    post?.pageCoverThumbnail
     
   const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
     'FUKASAWA_POST_LIST_ANIMATION',
@@ -60,7 +33,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
     CONFIG
   ) || showAnimate 
 
-  // 动画样式
+  // 动画样式  首屏卡片不用，后面翻出来的加动画
   const aosProps = FUKASAWA_POST_LIST_ANIMATION
     ? {
         'data-aos': 'fade-up',
