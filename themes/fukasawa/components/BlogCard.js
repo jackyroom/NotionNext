@@ -12,9 +12,41 @@ import TagItemMini from './TagItemMini'
  * @returns
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
-const {siteInfo} =useGlobal()
-  const showPreview =
-    siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
+  const { siteInfo } = useGlobal()
+
+  // 从 Notion blockMap 中提取第一张图片的 src
+  const extractFirstImageFromBlockMap = (blockMap) => {
+    if (!blockMap) return null
+    for (const key in blockMap) {
+      const block = blockMap[key]
+      if (block?.value?.type === 'image') {
+        const src = block?.value?.properties?.source?.[0]?.[0]
+        if (src) return src
+      }
+      // 有时图片存在于子块中
+      if (block?.value?.content?.length) {
+        for (const childId of block.value.content) {
+          const child = blockMap[childId]
+          if (child?.value?.type === 'image') {
+            const src = child?.value?.properties?.source?.[0]?.[0]
+            if (src) return src
+          }
+        }
+      }
+    }
+    return null
+  }
+
+  // 如果文章没有封面，则尝试自动提取第一张图片
+  if (post && !post.pageCoverThumbnail) {
+    const firstImage =
+      extractFirstImageFromBlockMap(post.blockMap) ||
+      (post?.content?.match(/<img[^>]+src="([^">]+)"/i)?.[1] ?? null)
+    if (firstImage) {
+      post.pageCoverThumbnail = firstImage
+    }
+  }
+
   // fukasawa 强制显示图片
   if (
     siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) &&
@@ -23,17 +55,15 @@ const {siteInfo} =useGlobal()
   ) {
     post.pageCoverThumbnail = siteInfo?.pageCover
   }
+
   const showPageCover =
     siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) &&
     post?.pageCoverThumbnail
-    
-  const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
-    'FUKASAWA_POST_LIST_ANIMATION',
-    null,
-    CONFIG
-  ) || showAnimate 
 
-  // 动画样式  首屏卡片不用，后面翻出来的加动画
+  const FUKASAWA_POST_LIST_ANIMATION =
+    siteConfig('FUKASAWA_POST_LIST_ANIMATION', null, CONFIG) || showAnimate
+
+  // 动画样式
   const aosProps = FUKASAWA_POST_LIST_ANIMATION
     ? {
         'data-aos': 'fade-up',
@@ -68,7 +98,9 @@ const {siteInfo} =useGlobal()
             <SmartLink
               passHref
               href={post?.href}
-              className={`break-words cursor-pointer font-bold hover:underline text-xl ${showPreview ? 'justify-center' : 'justify-start'} leading-tight text-gray-700 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400`}>
+              className={`break-words cursor-pointer font-bold hover:underline text-xl ${
+                showPageCover ? 'justify-center' : 'justify-start'
+              } leading-tight text-gray-700 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400`}>
               {siteConfig('POST_TITLE_ICON') && (
                 <NotionIcon icon={post.pageIcon} />
               )}{' '}
@@ -76,7 +108,7 @@ const {siteInfo} =useGlobal()
             </SmartLink>
           </h2>
 
-          {(!showPreview || showSummary) && (
+          {(!showPageCover || showSummary) && (
             <main className='my-2 tracking-wide line-clamp-3 text-gray-800 dark:text-gray-300 text-md font-light leading-6'>
               {post.summary}
             </main>
