@@ -8,77 +8,51 @@ import TagItemMini from './TagItemMini'
 
 /**
  * 文章列表卡片
+ * @param {*} param0
+ * @returns
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
   const { siteInfo } = useGlobal()
   const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
   
-  // 简化版：直接从文章内容中提取第一张真实图片
-  const extractFirstRealImage = () => {
-    if (!post) return null
+  // 完全保持原有逻辑，只在这里添加图片提取功能
+  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCover) {
     
-    // 1. 从blockMap中提取真实的文章图片（不是封面图）
-    if (post.blockMap) {
+    // 新增：直接从blockMap中提取第一张图片
+    const getFirstImageFromBlockMap = () => {
+      if (!post?.blockMap) return null
+      
       try {
-        const blocks = Object.values(post.blockMap).flat()
-        // 寻找第一个类型为image的block，且不是封面图
-        const imageBlock = blocks.find(block => {
-          const value = block.value
-          if (value?.type === 'image') {
-            const imageUrl = value?.format?.display_source || value?.properties?.source?.[0]?.[0]
-            // 排除Notion默认封面图
+        // 遍历所有block，找到第一个图片block
+        for (const blockId in post.blockMap) {
+          const block = post.blockMap[blockId]
+          if (block?.value?.type === 'image') {
+            const imageUrl = block.value?.properties?.source?.[0]?.[0] || 
+                           block.value?.format?.display_source
             if (imageUrl && !imageUrl.includes('page-cover')) {
-              return true
+              console.log('找到文章图片:', imageUrl) // 调试用
+              return imageUrl
             }
           }
-          return false
-        })
-        
-        if (imageBlock?.value) {
-          const imageUrl = imageBlock.value.format?.display_source || 
-                          imageBlock.value.properties?.source?.[0]?.[0]
-          if (imageUrl && !imageUrl.includes('page-cover')) {
-            return imageUrl
-          }
         }
       } catch (e) {
-        console.log('从blockMap提取图片失败:', e)
+        console.log('提取图片出错:', e)
       }
+      return null
     }
-    
-    // 2. 从content中提取图片URL（如果有的话）
-    if (post.content) {
-      try {
-        // 匹配文章内容中的图片URL，排除封面图
-        const imgRegex = /https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/gi
-        const matches = post.content.match(imgRegex)
-        if (matches) {
-          // 找到第一个不是封面图的图片
-          const realImage = matches.find(url => !url.includes('page-cover'))
-          if (realImage) return realImage
-        }
-      } catch (e) {
-        console.log('从content提取图片失败:', e)
-      }
-    }
-    
-    return null
-  }
 
-  // 完全保持原有逻辑，只在需要时替换封面
-  let finalCover = post?.pageCoverThumbnail
-  
-  // 只有在强制显示封面且当前没有封面时，才使用文章第一张图片
-  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !finalCover) {
-    const firstRealImage = extractFirstRealImage()
-    if (firstRealImage) {
-      finalCover = firstRealImage
+    // 尝试提取文章第一张图片
+    const firstImage = getFirstImageFromBlockMap()
+    if (firstImage) {
+      // 直接替换封面为文章第一张图片
+      post.pageCoverThumbnail = firstImage
     } else {
-      finalCover = siteInfo?.pageCover
+      // 如果提取失败，使用原来的默认封面
+      post.pageCoverThumbnail = siteInfo?.pageCover
     }
   }
 
-  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && finalCover
+  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && post?.pageCoverThumbnail
     
   const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
     'FUKASAWA_POST_LIST_ANIMATION',
@@ -86,6 +60,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
     CONFIG
   ) || showAnimate 
 
+  // 动画样式
   const aosProps = FUKASAWA_POST_LIST_ANIMATION
     ? {
         'data-aos': 'fade-up',
@@ -106,7 +81,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
           <SmartLink href={post?.href} passHref legacyBehavior>
             <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
               <LazyImage
-                src={finalCover}
+                src={post?.pageCoverThumbnail}
                 alt={post?.title || siteConfig('TITLE')}
                 className='object-cover w-full h-full hover:scale-125 transform duration-500'
               />
