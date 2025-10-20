@@ -24,38 +24,45 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
       const match = content.match(imgRegex)
       return match ? match[0] : null
     } catch (error) {
-      console.log('图片提取失败:', error)
       return null
     }
   }
 
-  // 安全的封面图处理 - 完全保持原始逻辑，只添加一层保护
-  let finalCover = post?.pageCoverThumbnail
-  
-  // 只有在强制显示封面且当前没有封面时，才尝试提取
-  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !finalCover) {
-    // 安全地尝试提取图片
-    let extractedImage = null
+  // 获取最终封面图
+  const getFinalCover = () => {
+    if (!post) return null
     
-    // 从摘要中尝试
-    if (post.summary) {
-      extractedImage = safelyExtractFirstImage(post.summary)
+    // 1. 如果文章已经有封面，直接使用
+    if (post.pageCoverThumbnail) {
+      return post.pageCoverThumbnail
     }
     
-    // 如果摘要中没有，从内容中尝试（如果有的话）
-    if (!extractedImage && post.content) {
-      extractedImage = safelyExtractFirstImage(post.content)
+    // 2. 如果强制显示封面，尝试提取图片或使用默认封面
+    if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG)) {
+      let extractedImage = null
+      
+      // 从摘要中尝试提取
+      if (post.summary) {
+        extractedImage = safelyExtractFirstImage(post.summary)
+      }
+      
+      // 如果摘要中没有，从内容中尝试
+      if (!extractedImage && post.content) {
+        extractedImage = safelyExtractFirstImage(post.content)
+      }
+      
+      // 返回提取的图片或默认封面
+      return extractedImage || siteInfo?.pageCover
     }
     
-    // 使用提取的图片或默认封面
-    finalCover = extractedImage || siteInfo?.pageCover
-    
-    // 安全地赋值
-    if (post) {
-      post.pageCoverThumbnail = finalCover
-    }
+    // 3. 不强制显示封面，返回null
+    return null
   }
 
+  const finalCover = getFinalCover()
+  
+  // 关键修改：显示卡片的逻辑与封面图分离
+  // 只要post存在就显示卡片，封面图是可选的
   const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && finalCover
 
   const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
@@ -85,7 +92,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
       style={{ maxHeight: '60rem' }}
       className='w-full lg:max-w-sm p-3 shadow mb-4 mx-2 bg-white dark:bg-hexo-black-gray hover:shadow-lg duration-200'>
       <div className='flex flex-col justify-between h-full'>
-        {/* 封面图 */}
+        {/* 封面图 - 可选部分 */}
         {showPageCover && (
           <SmartLink href={post?.href} passHref legacyBehavior>
             <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
@@ -98,8 +105,8 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
           </SmartLink>
         )}
 
-        {/* 文字部分 */}
-        <div className='flex flex-col w-full'>
+        {/* 文字部分 - 必须显示 */}
+        <div className={`flex flex-col w-full ${showPageCover ? '' : 'pt-2'}`}>
           <h2>
             <SmartLink
               passHref
