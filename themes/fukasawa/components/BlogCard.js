@@ -12,42 +12,20 @@ import TagItemMini from './TagItemMini'
  * @returns
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
-  const { siteInfo } = useGlobal()
-  const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
-  
-  // 完全保持原有逻辑
-  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCover) {
-    // 只在没有封面时尝试提取文章图片
-    if (!post.pageCoverThumbnail) {
-      // 简单地从blockMap中提取第一张图片
-      let firstImage = null
-      if (post.blockMap) {
-        try {
-          for (const blockId in post.blockMap) {
-            const block = post.blockMap[blockId]
-            if (block?.value?.type === 'image') {
-              const imageUrl = block.value?.format?.display_source || 
-                              block.value?.properties?.source?.[0]?.[0]
-              if (imageUrl && !imageUrl.includes('page-cover')) {
-                firstImage = imageUrl
-                break
-              }
-            }
-          }
-        } catch (e) {
-          // 忽略错误
-        }
-      }
-      
-      // 如果找到文章图片就使用，否则用默认封面
-      post.pageCoverThumbnail = firstImage || siteInfo?.pageCover
-    } else {
-      post.pageCoverThumbnail = siteInfo?.pageCover
-    }
+const {siteInfo} =useGlobal()
+  const showPreview =
+    siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
+  // fukasawa 强制显示图片
+  if (
+    siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) &&
+    post &&
+    !post.pageCover
+  ) {
+    post.pageCoverThumbnail = siteInfo?.pageCover
   }
-
-  // 完全保持原有显示逻辑
-  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && post?.pageCoverThumbnail
+  const showPageCover =
+    siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) &&
+    post?.pageCoverThumbnail
     
   const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
     'FUKASAWA_POST_LIST_ANIMATION',
@@ -55,6 +33,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
     CONFIG
   ) || showAnimate 
 
+  // 动画样式  首屏卡片不用，后面翻出来的加动画
   const aosProps = FUKASAWA_POST_LIST_ANIMATION
     ? {
         'data-aos': 'fade-up',
@@ -70,7 +49,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
       style={{ maxHeight: '60rem' }}
       className='w-full lg:max-w-sm p-3 shadow mb-4 mx-2 bg-white dark:bg-hexo-black-gray hover:shadow-lg duration-200'>
       <div className='flex flex-col justify-between h-full'>
-        {/* 封面图 - 完全保持原有代码 */}
+        {/* 封面图 */}
         {showPageCover && (
           <SmartLink href={post?.href} passHref legacyBehavior>
             <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
@@ -83,7 +62,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
           </SmartLink>
         )}
 
-        {/* 文字部分 - 完全保持原有代码 */}
+        {/* 文字部分 */}
         <div className='flex flex-col w-full'>
           <h2>
             <SmartLink
@@ -103,7 +82,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
             </main>
           )}
 
-          {/* 分类标签 - 完全保持原有代码 */}
+          {/* 分类标签 */}
           <div className='mt-auto justify-between flex'>
             {post.category && (
               <SmartLink
