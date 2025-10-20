@@ -14,40 +14,68 @@ import TagItemMini from './TagItemMini'
 const BlogCard = ({ showAnimate, post, showSummary }) => {
   const { siteInfo } = useGlobal()
 
-  // 从 Notion blockMap 中提取第一张图片的 src
+  /**
+   * 从 blockMap 安全提取第一张图片
+   */
   const extractFirstImageFromBlockMap = (blockMap) => {
-    if (!blockMap) return null
-    for (const key in blockMap) {
-      const block = blockMap[key]
-      if (block?.value?.type === 'image') {
-        const src = block?.value?.properties?.source?.[0]?.[0]
-        if (src) return src
-      }
-      // 有时图片存在于子块中
-      if (block?.value?.content?.length) {
-        for (const childId of block.value.content) {
-          const child = blockMap[childId]
-          if (child?.value?.type === 'image') {
-            const src = child?.value?.properties?.source?.[0]?.[0]
-            if (src) return src
+    if (!blockMap || typeof blockMap !== 'object') return null
+    try {
+      for (const key in blockMap) {
+        const block = blockMap[key]
+        const value = block?.value
+        if (!value) continue
+
+        // 图片类型块
+        if (value.type === 'image') {
+          const src =
+            value?.properties?.source?.[0]?.[0] ||
+            value?.format?.display_source ||
+            value?.format?.source
+          if (src) return src
+        }
+
+        // 遍历子节点
+        if (Array.isArray(value.content)) {
+          for (const childId of value.content) {
+            const child = blockMap[childId]?.value
+            if (child?.type === 'image') {
+              const src =
+                child?.properties?.source?.[0]?.[0] ||
+                child?.format?.display_source ||
+                child?.format?.source
+              if (src) return src
+            }
           }
         }
       }
+    } catch (e) {
+      console.warn('提取图片时出错:', e)
     }
     return null
   }
 
-  // 如果文章没有封面，则尝试自动提取第一张图片
+  /**
+   * 自动设置封面逻辑
+   */
   if (post && !post.pageCoverThumbnail) {
-    const firstImage =
-      extractFirstImageFromBlockMap(post.blockMap) ||
-      (post?.content?.match(/<img[^>]+src="([^">]+)"/i)?.[1] ?? null)
-    if (firstImage) {
-      post.pageCoverThumbnail = firstImage
+    let firstImage = null
+
+    // 尝试从 blockMap 提取
+    firstImage = extractFirstImageFromBlockMap(post.blockMap)
+
+    // 如果没找到，从 content HTML 中匹配 <img>
+    if (!firstImage && post?.content) {
+      const match = post.content.match(/<img[^>]+src="([^">]+)"/i)
+      if (match && match[1]) {
+        firstImage = match[1]
+      }
     }
+
+    // 如果仍未找到，使用默认封面
+    post.pageCoverThumbnail = firstImage || siteInfo?.pageCover
   }
 
-  // fukasawa 强制显示图片
+  // fukasawa 强制显示封面逻辑
   if (
     siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) &&
     post &&
@@ -63,7 +91,6 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
   const FUKASAWA_POST_LIST_ANIMATION =
     siteConfig('FUKASAWA_POST_LIST_ANIMATION', null, CONFIG) || showAnimate
 
-  // 动画样式
   const aosProps = FUKASAWA_POST_LIST_ANIMATION
     ? {
         'data-aos': 'fade-up',
@@ -79,14 +106,15 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
       style={{ maxHeight: '60rem' }}
       className='w-full lg:max-w-sm p-3 shadow mb-4 mx-2 bg-white dark:bg-hexo-black-gray hover:shadow-lg duration-200'>
       <div className='flex flex-col justify-between h-full'>
+
         {/* 封面图 */}
-        {showPageCover && (
+        {showPageCover && post.pageCoverThumbnail && (
           <SmartLink href={post?.href} passHref legacyBehavior>
-            <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
+            <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden rounded-xl'>
               <LazyImage
-                src={post?.pageCoverThumbnail}
+                src={post.pageCoverThumbnail}
                 alt={post?.title || siteConfig('TITLE')}
-                className='object-cover w-full h-full hover:scale-125 transform duration-500'
+                className='object-cover w-full h-48 hover:scale-110 transform duration-500'
               />
             </div>
           </SmartLink>
@@ -98,9 +126,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
             <SmartLink
               passHref
               href={post?.href}
-              className={`break-words cursor-pointer font-bold hover:underline text-xl ${
-                showPageCover ? 'justify-center' : 'justify-start'
-              } leading-tight text-gray-700 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400`}>
+              className='break-words cursor-pointer font-bold hover:underline text-xl leading-tight text-gray-700 dark:text-gray-100 hover:text-blue-500 dark:hover:text-blue-400'>
               {siteConfig('POST_TITLE_ICON') && (
                 <NotionIcon icon={post.pageIcon} />
               )}{' '}
@@ -114,7 +140,7 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
             </main>
           )}
 
-          {/* 分类标签 */}
+          {/* 分类与标签 */}
           <div className='mt-auto justify-between flex'>
             {post.category && (
               <SmartLink
