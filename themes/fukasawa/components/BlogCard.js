@@ -12,50 +12,48 @@ import TagItemMini from './TagItemMini'
  * @returns
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
-const {siteInfo} =useGlobal()
-  const showPreview =
-    siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
-  // fukasawa 强制显示图片
-  if (
-    siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) &&
-    post &&
-    !post.pageCover
-  ) {
-    post.pageCoverThumbnail = siteInfo?.pageCover
+  const { siteInfo } = useGlobal()
+
+  // 简化版：直接从内容中提取第一张图片
+  const extractFirstImage = (content) => {
+    if (!content) return null
+    const imgRegex = /https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/i
+    const match = content.match(imgRegex)
+    return match ? match[0] : null
   }
-  const showPageCover =
-    siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) &&
-    post?.pageCoverThumbnail
-    
-  const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
-    'FUKASAWA_POST_LIST_ANIMATION',
-    null,
-    CONFIG
-  ) || showAnimate 
 
-  // 动画样式  首屏卡片不用，后面翻出来的加动画
-  const aosProps = FUKASAWA_POST_LIST_ANIMATION
-    ? {
-        'data-aos': 'fade-up',
-        'data-aos-duration': '300',
-        'data-aos-once': 'true',
-        'data-aos-anchor-placement': 'top-bottom'
-      }
-    : {}
+  // 修改封面图来源
+  let coverImage = post?.pageCoverThumbnail
+  if (!coverImage && post) {
+    // 尝试从摘要中提取
+    coverImage = extractFirstImage(post.summary)
+    // 如果摘要中没有，尝试从内容中提取
+    if (!coverImage && post.content) {
+      coverImage = extractFirstImage(post.content)
+    }
+    // 如果都没有，使用默认封面
+    if (!coverImage) {
+      coverImage = siteInfo?.pageCover
+    }
+  }
 
+  // 强制显示封面逻辑
+  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCoverThumbnail) {
+    post.pageCoverThumbnail = coverImage
+  }
+
+  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && coverImage
+  
+  // 在渲染部分使用 coverImage
   return (
-    <article
-      {...aosProps}
-      style={{ maxHeight: '60rem' }}
-      className='w-full lg:max-w-sm p-3 shadow mb-4 mx-2 bg-white dark:bg-hexo-black-gray hover:shadow-lg duration-200'>
+    <article {...aosProps}>
       <div className='flex flex-col justify-between h-full'>
-        {/* 封面图 */}
         {showPageCover && (
-          <SmartLink href={post?.href} passHref legacyBehavior>
+          <SmartLink href={post?.href}>
             <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
               <LazyImage
-                src={post?.pageCoverThumbnail}
-                alt={post?.title || siteConfig('TITLE')}
+                src={coverImage}  // 使用提取的图片
+                alt={post?.title}
                 className='object-cover w-full h-full hover:scale-125 transform duration-500'
               />
             </div>
