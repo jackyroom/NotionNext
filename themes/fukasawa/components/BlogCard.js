@@ -13,65 +13,61 @@ import TagItemMini from './TagItemMini'
  */
 const BlogCard = ({ showAnimate, post, showSummary }) => {
   const { siteInfo } = useGlobal()
+  const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post.blockMap
   
-  const showPreview = siteConfig('FUKASAWA_POST_LIST_PREVIEW', null, CONFIG) && post?.blockMap
-  
-  // 安全地提取第一张图片的函数
-  const safelyExtractFirstImage = (content) => {
-    if (!content || typeof content !== 'string') return null
-    try {
-      const imgRegex = /https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/i
-      const match = content.match(imgRegex)
-      return match ? match[0] : null
-    } catch (error) {
+  // 完全保持原有逻辑，只在这里添加图片提取功能
+  if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG) && post && !post.pageCover) {
+    // 新增：提取文章内容中的第一张图片
+    const extractFirstImage = () => {
+      if (!post) return null
+      
+      // 从blockMap中提取图片
+      if (post.blockMap) {
+        try {
+          const blocks = Object.values(post.blockMap).flat()
+          const imageBlock = blocks.find(block => 
+            block.value?.type === 'image'
+          )
+          if (imageBlock?.value?.properties?.source?.[0]?.[0]) {
+            return imageBlock.value.properties.source[0][0]
+          }
+          if (imageBlock?.value?.format?.display_source) {
+            return imageBlock.value.format.display_source
+          }
+        } catch (e) {
+          console.log('从blockMap提取图片失败')
+        }
+      }
+      
+      // 从summary中提取图片URL
+      if (post.summary) {
+        const imgMatch = post.summary.match(/https?:\/\/[^\s"']+\.(jpg|jpeg|png|gif|webp)(\?[^\s"']*)?/i)
+        if (imgMatch) {
+          return imgMatch[0]
+        }
+      }
+      
       return null
     }
+    
+    // 尝试提取第一张图片
+    const firstImage = extractFirstImage()
+    if (firstImage) {
+      post.pageCoverThumbnail = firstImage
+    } else {
+      post.pageCoverThumbnail = siteInfo?.pageCover
+    }
   }
 
-  // 获取最终封面图
-  const getFinalCover = () => {
-    if (!post) return null
+  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && post?.pageCoverThumbnail
     
-    // 1. 如果文章已经有封面，直接使用
-    if (post.pageCoverThumbnail) {
-      return post.pageCoverThumbnail
-    }
-    
-    // 2. 如果强制显示封面，尝试提取图片或使用默认封面
-    if (siteConfig('FUKASAWA_POST_LIST_COVER_FORCE', null, CONFIG)) {
-      let extractedImage = null
-      
-      // 从摘要中尝试提取
-      if (post.summary) {
-        extractedImage = safelyExtractFirstImage(post.summary)
-      }
-      
-      // 如果摘要中没有，从内容中尝试
-      if (!extractedImage && post.content) {
-        extractedImage = safelyExtractFirstImage(post.content)
-      }
-      
-      // 返回提取的图片或默认封面
-      return extractedImage || siteInfo?.pageCover
-    }
-    
-    // 3. 不强制显示封面，返回null
-    return null
-  }
-
-  const finalCover = getFinalCover()
-  
-  // 关键修改：显示卡片的逻辑与封面图分离
-  // 只要post存在就显示卡片，封面图是可选的
-  const showPageCover = siteConfig('FUKASAWA_POST_LIST_COVER', null, CONFIG) && finalCover
-
   const FUKASAWA_POST_LIST_ANIMATION = siteConfig(
     'FUKASAWA_POST_LIST_ANIMATION',
     null,
     CONFIG
   ) || showAnimate 
 
-  // 动画样式
+  // 动画样式  首屏卡片不用，后面翻出来的加动画
   const aosProps = FUKASAWA_POST_LIST_ANIMATION
     ? {
         'data-aos': 'fade-up',
@@ -81,23 +77,18 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
       }
     : {}
 
-  // 如果post为空，返回一个空的div防止崩溃
-  if (!post) {
-    return <div className="w-full lg:max-w-sm p-3">加载中...</div>
-  }
-
   return (
     <article
       {...aosProps}
       style={{ maxHeight: '60rem' }}
       className='w-full lg:max-w-sm p-3 shadow mb-4 mx-2 bg-white dark:bg-hexo-black-gray hover:shadow-lg duration-200'>
       <div className='flex flex-col justify-between h-full'>
-        {/* 封面图 - 可选部分 */}
+        {/* 封面图 */}
         {showPageCover && (
           <SmartLink href={post?.href} passHref legacyBehavior>
             <div className='flex-grow mb-3 w-full duration-200 cursor-pointer transform overflow-hidden'>
               <LazyImage
-                src={finalCover}
+                src={post?.pageCoverThumbnail}
                 alt={post?.title || siteConfig('TITLE')}
                 className='object-cover w-full h-full hover:scale-125 transform duration-500'
               />
@@ -105,8 +96,8 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
           </SmartLink>
         )}
 
-        {/* 文字部分 - 必须显示 */}
-        <div className={`flex flex-col w-full ${showPageCover ? '' : 'pt-2'}`}>
+        {/* 文字部分 */}
+        <div className='flex flex-col w-full'>
           <h2>
             <SmartLink
               passHref
@@ -115,13 +106,13 @@ const BlogCard = ({ showAnimate, post, showSummary }) => {
               {siteConfig('POST_TITLE_ICON') && (
                 <NotionIcon icon={post.pageIcon} />
               )}{' '}
-              {post.title || '无标题'}
+              {post.title}
             </SmartLink>
           </h2>
 
           {(!showPreview || showSummary) && (
             <main className='my-2 tracking-wide line-clamp-3 text-gray-800 dark:text-gray-300 text-md font-light leading-6'>
-              {post.summary || ''}
+              {post.summary}
             </main>
           )}
 
