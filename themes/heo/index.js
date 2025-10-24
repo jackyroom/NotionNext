@@ -153,35 +153,57 @@ const LayoutIndex = props => {
 
 // ... (位于 index.js 文件的中上部，直到 LayoutPostList 函数定义之前)
 
+
+// ... (保留文件顶部的其他导入，不需要删除)
+
+// =================================================================
+// ⬇️ 【重要】步骤 1：定义分类和布局的映射表
+// =================================================================
+
+/**
+ * 自定义分类布局配置表
+ * 键(key)是您的 Notion 数据库中实际的“分类名”
+ * 值(value)是您希望为其应用的、用于CSS的“安全英文类名”
+ */
+const CATEGORY_LAYOUT_MAP = {
+  '审美构图': 'category-layout-art', 
+  '文学修养': 'category-layout-art',
+  '程序设计': 'category-layout-art',
+  '图形学': 'category-layout-art', 
+  '游戏设计': 'category-layout-art', 
+};
+
+// =================================================================
+// ⬆️ 【重要】步骤 1：配置映射表结束
+// =================================================================
+
+
 /**
  * 博客列表
  * @param {*} props
  * @returns
  */
 const LayoutPostList = props => {
-  // =================================================================
-  // ⬇️ 替换后的代码：使用 data-category 属性安全传递分类名称 ⬇️
-  // =================================================================
   const router = useRouter()  
-
-  // 1. 获取未编码的分类或标签名称
+  // 1. 获取当前路由中的分类名称（例如: '审美构图'）
   const slugName = router.query.category || router.query.tag || ''
-  
-  // 2. 您可以通过这个逻辑保留原有的通用 class (pagecategory-category)
-  const pageRouteClass = router.pathname
-    .split('?')[0] // 移除查询参数
-    .replace(/\//g, '-') // 将斜杠替换为破折号
-    .replace(/\[|\]/g, '') // 移除方括号
-    .replace(/^-/, 'page') // 确保以 'page' 开头
-  // 3. 注意: 上述逻辑在生产环境可能生成 'page-category-%E5%AE%A1%E7%BE%8E%E6%9E%84%E5%9B%BE'
-  //    但我们主要依靠下面的 data-attribute 来精确选择。
 
+  // 2. 从映射表中查找对应的安全类名，如果找不到则为空字符串
+  const specificClass = CATEGORY_LAYOUT_MAP[slugName] || ''
+
+  // 3. 获取基础路由类（保持不变）
+  const pageRouteClass = router.pathname
+    .split('?')[0]
+    .replace(/\//g, '-')
+    .replace(/\[|\]/g, '')
+    .replace(/^-/, 'page')
+    
   return (
-    // ⬇️ 注入 data-category 属性，值为未编码的中文名称 ⬇️
+    // 4. 将查找到的 specificClass 注入到 className 中
     <div 
       id='post-outer-wrapper' 
-      className={`px-5 md:px-0 ${pageRouteClass}`}
-      data-category={slugName} // <- 【核心改动】使用 data-attribute 
+      className={`px-5 md:px-0 ${pageRouteClass} ${specificClass}`} 
+      data-category={slugName} // 保持这个属性，用于调试中文是否正确获取
     >
       {/* 文章分类条 */}
       <CategoryBar {...props} />
@@ -193,6 +215,8 @@ const LayoutPostList = props => {
     </div>
   )
 }
+
+// ... (LayoutSearch 及文件其余部分保持不变)
 
 // ... (LayoutSearch 及文件其余部分保持不变)
 
