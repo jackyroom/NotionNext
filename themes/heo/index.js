@@ -157,8 +157,22 @@ const LayoutIndex = props => {
  * @returns
  */
 const LayoutPostList = props => {
+  // =================================================================
+  // ⬇️ 已修改：获取并格式化路由路径作为独特的 CSS 类名 ⬇️
+  // =================================================================
+  const router = useRouter() 
+  
+  // 获取当前路由路径，并清理成 CSS 类名 (e.g., /category/审美构图 -> page-category-审美构图)
+  const pageRouteClass = router.pathname
+    .split('?')[0] 
+    .replace(/\//g, '-') 
+    .replace(/\[|\]/g, '')
+    .replace(/^-/, 'page') 
+  // =================================================================
+
   return (
-    <div id='post-outer-wrapper' className='px-5  md:px-0'>
+    // ⬇️ 已修改：将动态类名注入到最外层 div ⬇️
+    <div id='post-outer-wrapper' className={`px-5 md:px-0 ${pageRouteClass}`}>
       {/* 文章分类条 */}
       <CategoryBar {...props} />
       {siteConfig('POST_LIST_STYLE') === 'page' ? (
