@@ -151,6 +151,8 @@ const LayoutIndex = props => {
   )
 }
 
+// ... (位于 index.js 文件的中上部，直到 LayoutPostList 函数定义之前)
+
 /**
  * 博客列表
  * @param {*} props
@@ -158,21 +160,29 @@ const LayoutIndex = props => {
  */
 const LayoutPostList = props => {
   // =================================================================
-  // ⬇️ 已修改：获取并格式化路由路径作为独特的 CSS 类名 ⬇️
+  // ⬇️ 替换后的代码：使用 data-category 属性安全传递分类名称 ⬇️
   // =================================================================
-  const router = useRouter() 
+  const router = useRouter()  
+
+  // 1. 获取未编码的分类或标签名称
+  const slugName = router.query.category || router.query.tag || ''
   
-  // 获取当前路由路径，并清理成 CSS 类名 (e.g., /category/审美构图 -> page-category-审美构图)
+  // 2. 您可以通过这个逻辑保留原有的通用 class (pagecategory-category)
   const pageRouteClass = router.pathname
-    .split('?')[0] 
-    .replace(/\//g, '-') 
-    .replace(/\[|\]/g, '')
-    .replace(/^-/, 'page') 
-  // =================================================================
+    .split('?')[0] // 移除查询参数
+    .replace(/\//g, '-') // 将斜杠替换为破折号
+    .replace(/\[|\]/g, '') // 移除方括号
+    .replace(/^-/, 'page') // 确保以 'page' 开头
+  // 3. 注意: 上述逻辑在生产环境可能生成 'page-category-%E5%AE%A1%E7%BE%8E%E6%9E%84%E5%9B%BE'
+  //    但我们主要依靠下面的 data-attribute 来精确选择。
 
   return (
-    // ⬇️ 已修改：将动态类名注入到最外层 div ⬇️
-    <div id='post-outer-wrapper' className={`px-5 md:px-0 ${pageRouteClass}`}>
+    // ⬇️ 注入 data-category 属性，值为未编码的中文名称 ⬇️
+    <div 
+      id='post-outer-wrapper' 
+      className={`px-5 md:px-0 ${pageRouteClass}`}
+      data-category={slugName} // <- 【核心改动】使用 data-attribute 
+    >
       {/* 文章分类条 */}
       <CategoryBar {...props} />
       {siteConfig('POST_LIST_STYLE') === 'page' ? (
@@ -183,6 +193,8 @@ const LayoutPostList = props => {
     </div>
   )
 }
+
+// ... (LayoutSearch 及文件其余部分保持不变)
 
 /**
  * 搜索
