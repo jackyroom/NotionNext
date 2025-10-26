@@ -46,6 +46,68 @@ import AISummary from '@/components/AISummary'
 import ArticleExpirationNotice from '@/components/ArticleExpirationNotice'
 
 /**
+ * 网站导航页面布局
+ * @param props 接收来自 /pages/sites.js 的数据
+ * @returns {JSX.Element}
+ */
+const LayoutWebsite = props => {
+    // 1. 从 props 中解构出你需要的数据
+    const { allSites, allCategories } = props 
+    
+    // 2. 状态：控制当前选中的分类 (默认为第一个分类)
+    const [activeCategory, setActiveCategory] = useState(allCategories[0]);
+    
+    // 3. 过滤：根据选中的分类过滤网站列表
+    const activeWebsites = allSites.filter(site => site.category === activeCategory) || [];
+    
+    // ... (保持你之前定义的 cardCSS 或将其移到 CSS 文件中)
+
+    return (
+        // 使用 LayoutBase 作为页面的基础框架
+        <LayoutBase {...props} className="flex-row">
+            
+            {/* 你的 CSS 样式区域 (为了简化，这里省略) */}
+
+            {/* 左侧：分类导航栏 */}
+            <div className="website-sidebar">
+                {allCategories.map(catName => ( // 遍历所有分类名称
+                    <div
+                        key={catName}
+                        className={`tab-item ${activeCategory === catName ? 'active' : ''}`}
+                        onClick={() => setActiveCategory(catName)} // 点击切换
+                    >
+                        {catName}
+                    </div>
+                ))}
+            </div>
+
+            {/* 右侧：网站卡片内容区 */}
+            <div className="flex-grow p-10">
+                <h2 className="text-xl font-bold mb-5">{activeCategory} 网站列表</h2>
+                
+                {/* 网站 Grid 布局 */}
+                <div className="website-grid">
+                    {activeWebsites.map((site, index) => (
+                        <a 
+                            key={index} 
+                            href={site.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="website-card"
+                        >
+                            {/* 网站名称、Logo、描述等信息 */}
+                            <div className="font-semibold">{site.title}</div>
+                            <div className="text-sm text-gray-500 mt-1">{site.desc}</div>
+                        </a>
+                    ))}
+                </div>
+            </div>
+            
+        </LayoutBase>
+    );
+}
+
+/**
  * 基础布局 采用上中下布局，移动端使用顶部侧边导航栏
  * @param props
  * @returns {JSX.Element}
@@ -551,6 +613,7 @@ const LayoutTagIndex = props => {
 }
 
 export {
+  LayoutWebsite,
   Layout404,
   LayoutArchive,
   LayoutBase,
