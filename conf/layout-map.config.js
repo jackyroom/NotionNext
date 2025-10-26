@@ -5,6 +5,7 @@
 module.exports = {
   //
   LAYOUT_MAPPINGS: {
+    '/sites': 'LayoutWebsite',
     '-1': 'LayoutBase',
     '/': 'LayoutIndex',
     '/archive': 'LayoutArchive',
