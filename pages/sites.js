@@ -2,7 +2,7 @@ import { LayoutWebsite } from '../themes/heo' // 确保路径正确，导入你�
 import { getAllPosts } from '../lib/notion'   // 导入 NotionNext 内部的 API 函数
 
 // ⚠️ 【重要】替换成你的 Notion 网站数据库的 ID
-const WEBSITE_DATABASE_ID = '2987772b83fd808fb885cfe28941956d' 
+const WEBSITE_DATABASE_ID = '2987772b83fd80a184abc450d0669862' 
 
 // 1. 数据获取函数 (在构建时/服务器端运行)
 export async function getStaticProps() {
