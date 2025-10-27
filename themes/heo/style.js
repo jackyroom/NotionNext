@@ -10,7 +10,7 @@ const Style = () => {
       body {
         background-color: #f7f9fe;
       }
-
+      
       /* ------------------------------------------------------------- */
       /* LayoutWebsite 的自定义样式 */
       /* ------------------------------------------------------------- */
@@ -73,7 +73,7 @@ const Style = () => {
       }
 
 
-      /* 右侧网站卡片 Grid 容器样式 */
+      /* **网站卡片 Grid 容器样式** (修复卡片丢失样式的问题) */
       .website-grid {
         display: grid;
         /* 自动适应列数，最小宽度 180px */
@@ -82,7 +82,7 @@ const Style = () => {
         padding: 0;
       }
 
-      /* 网站卡片链接样式 */
+      /* **网站卡片链接样式** (修复卡片丢失样式的问题) */
       .website-card {
         /* 确保卡片是块级元素 */
         display: block;
@@ -93,8 +93,10 @@ const Style = () => {
         /* 卡片背景和边框 */
         background-color: #ffffff;
         border: 1px solid #e5e7eb;
-        /* 卡片文本颜色（继承自父级，但显式设置以防万一） */
-        color: #1f2937;
+        /* 确保字体颜色继承正确 */
+        color: #1f2937; 
+        /* 避免被父级影响 */
+        min-height: 80px; 
       }
 
       /* 黑暗模式：网站卡片 */
@@ -116,34 +118,26 @@ const Style = () => {
       }
 
       /* ------------------------------------------------------------- */
-      /* 【新增】强制隐藏 sites 页面上的多余元素 */
+      /* 【重点】强制隐藏 sites 页面上的多余元素和布局残留 */
       /* ------------------------------------------------------------- */
 
-      /* 隐藏左侧图标导航栏 (HEO主题默认) */
-      .sites-page-container ~ #side-right, /* 确保也隐藏了默认的右侧边栏（如果 index.js 没生效）*/
-      .sites-page-container #container-inner > .flex-grow > div:first-child:not(.website-sidebar) {
-          display: none !important;
-      }
-
-      /* 隐藏顶部导航栏（如图 image_30a9bb.jpg 所示的顶部多余菜单） */
-      /* 我们假设顶部多余的元素在 LayoutBase 的 slotTop 中或者它是一个单独的全局组件 */
-      /* 这是一个更广泛的尝试来清除所有不属于 Header/Footer 的元素 */
-      #theme-heo #wrapper-outer > .w-full.mx-auto.relative > div:first-child > div:first-child:not(.flex.w-full) {
+      /* 隐藏左侧图标导航栏 (HEO主题默认) - 针对 image_30a9bb.jpg 的左侧列图标 */
+      #theme-heo #wrapper-outer + header + .w-full.relative:first-child,
+      #theme-heo #wrapper-outer + header + .w-full.relative > div:first-child,
+      #theme-heo #container-inner > .w-full:first-child > .w-full:first-child {
           display: none !important;
       }
       
-      /* 针对图片中显示的主页卡片（如 JackyLearningRes），它们通常在 #side-right 或主页特定容器内 */
-      /* 确保 #container-inner 内部，只有你的 .flex.w-full (即 sites 布局) 及其兄弟元素显示 */
+      /* 隐藏 LayoutBase 内部的默认右侧栏 SideRight 及其相关卡片（针对 image_ad8959.png 的右侧黑洞）*/
+      #container-inner > .lg\\:px-2, /* 移除中间的间隔 */
+      #container-inner > .hidden.xl\\:block { /* 移除右侧栏容器 */
+          display: none !important;
+      }
+      
+      /* 确保你的内容容器能够完全占据空间 */
       .sites-page-container {
-          /* 确保 sites 容器不被主题其他 flex-grow 元素影响 */
-          flex-grow: 1 !important;
-          max-width: none !important; /* 确保它能适应父容器 */
-      }
-      
-      /* 隐藏 LayoutBase 内部的默认右侧栏 SideRight 及其相关卡片（如果 index.js 没生效）*/
-      .sites-page-container ~ .hidden.xl\:block, 
-      .sites-page-container ~ #container-inner > .hidden.xl\:block {
-          display: none !important;
+          width: 100% !important; 
+          min-height: calc(100vh - 100px); /* 确保高度足够 */
       }
 
 
