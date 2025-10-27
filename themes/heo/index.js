@@ -1,9 +1,9 @@
 /**
- *   HEO 主题说明
- *  > 主题设计者 [张洪](https://zhheo.com/)
- *  > 主题开发者 [tangly1024](https://github.com/tangly1024)
- *  1. 开启方式 在blog.config.js 将主题配置为 `HEO`
- *  2. 更多说明参考此[文档](https://docs.tangly1024.com/article/notionnext-heo)
+ * HEO 主题说明
+ * > 主题设计者 [张洪](https://zhheo.com/)
+ * > 主题开发者 [tangly1024](https://github.com/tangly1024)
+ * 1. 开启方式 在blog.config.js 将主题配置为 `HEO`
+ * 2. 更多说明参考此[文档](https://docs.tangly1024.com/article/notionnext-heo)
  */
 
 import Comment from '@/components/Comment'
@@ -45,19 +45,25 @@ import { Style } from './style'
 import AISummary from '@/components/AISummary'
 import ArticleExpirationNotice from '@/components/ArticleExpirationNotice'
 
+/**
+ * 网站导航页面布局
+ * @param props 接收来自 /pages/sites.js 的数据
+ * @returns {JSX.Element}
+ */
 const LayoutWebsite = props => {
     // 1. 从 props 中解构出你需要的数据
     const { allSites, allCategories } = props
     
     // 2. 状态：控制当前选中的分类 (默认为第一个分类)
-    const [activeCategory, setActiveCategory] = useState(allCategories[0]);
+    // 确保 allCategories 有值，否则设置为一个默认值
+    const defaultCategory = allCategories && allCategories.length > 0 ? allCategories[0] : '默认分类';
+    const [activeCategory, setActiveCategory] = useState(defaultCategory);
     
     // 3. 过滤：根据选中的分类过滤网站列表
     const activeWebsites = allSites.filter(site => site.category === activeCategory) || [];
     
     return (
         // 关键修改：添加 'sites-page-container' 作为标识符
-        // 注意：将 LayoutBase 的 className 属性保留，不覆盖，以确保 LayoutBase 内部能够识别
         <LayoutBase {...props} className="sites-page-container"> 
             
             {/* 新增的包裹容器：让你的左右布局生效，并作为 LayoutBase 的 children */}
@@ -105,6 +111,7 @@ const LayoutWebsite = props => {
     );
 }
 
+
 /**
  * 基础布局 采用上中下布局，移动端使用顶部侧边导航栏
  * @param props
@@ -118,8 +125,7 @@ const LayoutBase = props => {
   const { fullWidth, isDarkMode } = useGlobal()
   const router = useRouter()
   
-  // 【新增代码】关键判断：检查 className 中是否包含 'sites-page-container'
-  // 这是 LayoutWebsite 组件传递给 LayoutBase 的标识符
+  // 【修改点 A - 新增代码】关键判断：检查 className 中是否包含 'sites-page-container'
   const isSitesPage = className && className.includes('sites-page-container')
 
   const headerSlot = (
@@ -138,8 +144,8 @@ const LayoutBase = props => {
     </header>
   )
 
-  // 【修改代码】右侧栏 用户信息+标签列表
-  // 只有在不是网站导航页时才渲染 slotRight
+  // 【修改点 A - 逻辑修改】右侧栏 用户信息+标签列表
+  // 只有在不是网站导航页时才渲染 slotRight (当 isSitesPage 为 true 时，slotRight 为 null)
   const slotRight =
     router.route === '/404' || fullWidth || isSitesPage ? null : <SideRight {...props} />
 
@@ -176,7 +182,7 @@ const LayoutBase = props => {
           <div className={`w-full h-auto ${className || ''}`}>
             {/* 主区上部嵌入 */}
             {slotTop}
-            {/* 【注意】children 在 LayoutWebsite 中已经包含了你自定义的左右布局 */}
+            {/* children 在 LayoutWebsite 中已经包含了你自定义的左右布局 */}
             {children}
           </div>
 
@@ -198,87 +204,6 @@ const LayoutBase = props => {
   )
 }
 
-  // 右侧栏 用户信息+标签列表
-  const slotRight =
-    router.route === '/404' || fullWidth ? null : <SideRight {...props} />
-
-  const maxWidth = fullWidth ? 'max-w-[96rem] mx-auto' : 'max-w-[86rem]' // 普通最大宽度是86rem和顶部菜单栏对齐，留空则与窗口对齐
-
-  const HEO_HERO_BODY_REVERSE = siteConfig(
-    'HEO_HERO_BODY_REVERSE',
-    false,
-    CONFIG
-  )
-  const HEO_LOADING_COVER = siteConfig('HEO_LOADING_COVER', true, CONFIG)
-
-  // 加载wow动画
-  useEffect(() => {
-    loadWowJS()
-  }, [])
-
-  return (
-    <div
-      id='theme-heo'
-      className={`${siteConfig('FONT_STYLE')} bg-[#f7f9fe] dark:bg-[#18171d] h-full min-h-screen flex flex-col scroll-smooth`}>
-      <Style />
-
-      {/* 顶部嵌入 导航栏，首页放hero，文章页放文章详情 */}
-      {headerSlot}
-
-      {/* 主区块 */}
-      <main
-        id='wrapper-outer'
-        className={`flex-grow w-full ${maxWidth} mx-auto relative md:px-5`}>
-        <div
-          id='container-inner'
-          className={`${HEO_HERO_BODY_REVERSE ? 'flex-row-reverse' : ''} w-full mx-auto lg:flex justify-center relative z-10`}>
-          <div className={`w-full h-auto ${className || ''}`}>
-            {/* 主区上部嵌入 */}
-            {slotTop}
-            {children}
-          </div>
-
-          <div className='lg:px-2'></div>
-
-          <div className='hidden xl:block'>
-            {/* 主区快右侧 */}
-            {slotRight}
-          </div>
-        </div>
-      </main>
-
-      {/* 页脚 */}
-      <Footer />
-
-      {HEO_LOADING_COVER && <LoadingCover />}
-    </div>
-  )
-}
-
-/**
- * 首页
- * 是一个博客列表，嵌入一个Hero大图
- * @param {*} props
- * @returns
- */
-const LayoutIndex = props => {
-  return (
-    <div id='post-outer-wrapper' className='px-5 md:px-0'>
-      {/* 文章分类条 */}
-      <CategoryBar {...props} />
-      {siteConfig('POST_LIST_STYLE') === 'page' ? (
-        <BlogPostListPage {...props} />
-      ) : (
-        <BlogPostListScroll {...props} />
-      )}
-    </div>
-  )
-}
-
-// ... (位于 index.js 文件的中上部，直到 LayoutPostList 函数定义之前)
-
-
-// ... (保留文件顶部的其他导入，不需要删除)
 
 // =================================================================
 // ⬇️ 【重要】步骤 1：定义分类和布局的映射表
@@ -300,6 +225,27 @@ const CATEGORY_LAYOUT_MAP = {
 // =================================================================
 // ⬆️ 【重要】步骤 1：配置映射表结束
 // =================================================================
+
+
+/**
+ * 首页
+ * 是一个博客列表，嵌入一个Hero大图
+ * @param {*} props
+ * @returns
+ */
+const LayoutIndex = props => {
+  return (
+    <div id='post-outer-wrapper' className='px-5 md:px-0'>
+      {/* 文章分类条 */}
+      <CategoryBar {...props} />
+      {siteConfig('POST_LIST_STYLE') === 'page' ? (
+        <BlogPostListPage {...props} />
+      ) : (
+        <BlogPostListScroll {...props} />
+      )}
+    </div>
+  )
+}
 
 
 /**
@@ -339,10 +285,6 @@ const LayoutPostList = props => {
     </div>
   )
 }
-
-// ... (LayoutSearch 及文件其余部分保持不变)
-
-// ... (LayoutSearch 及文件其余部分保持不变)
 
 /**
  * 搜索
