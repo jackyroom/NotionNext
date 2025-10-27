@@ -1,43 +1,40 @@
+// /pages/sites.js (临时测试版本)
+
 import { LayoutWebsite } from '../themes/heo' // 确保路径正确，导入你的布局
-import { getAllPosts } from '../lib/notion'   // 导入 NotionNext 内部的 API 函数
 
-// ⚠️ 【重要】替换成你的 Notion 网站数据库的 ID
-const WEBSITE_DATABASE_ID = '2987772b83fd808fb885cfe28941956d' 
+// ⚠️ 注意：这个版本是用来测试路由和布局的，它不依赖 Notion API！
 
-// 1. 数据获取函数 (在构建时/服务器端运行)
+// 临时假数据 (Mock Data)
+const MOCK_SITES = [
+    { title: 'Google (假)', link: '#', category: '常用', desc: '测试数据 1' },
+    { title: 'BiliBili (假)', link: '#', category: '常用', desc: '测试数据 2' },
+    { title: 'Unsplash (假)', link: '#', category: '图片', desc: '测试数据 3' },
+    { title: 'Midjourney (假)', link: '#', category: 'AI', desc: '测试数据 4' },
+]
+
+// 临时假分类
+const MOCK_CATEGORIES = ['常用', '图片', 'AI']
+
+
+// 1. 数据获取函数 (不再调用 Notion API)
 export async function getStaticProps() {
-  // 从指定的 Notion 数据库获取所有项目
-  const notionData = await getAllPosts({ 
-      notionDatabaseId: WEBSITE_DATABASE_ID,
-      type: 'all' // 获取所有页面/行
-  })
-
-  // 整理数据，提取关键信息
-  const sites = notionData.map(post => ({
-    title: post.title, 
-    link: post.pageLink, // 假设 NotionNext 已经处理了链接
-    category: post.category, // 确保 Notion 列名是 Category
-    desc: post.summary, // 假设 NotionNext 已经处理了简介
-    // ... 你需要的所有字段
-  }))
-
-  // 提取所有独特的分类，用于左侧导航栏
-  const categories = [...new Set(sites.map(s => s.category))]
-
+  
+  // ⛔️ 删除了所有 Notion API 相关的代码，直接返回假数据
+  
   return {
     props: {
-      allSites: sites,
-      allCategories: categories,
-      // 传递一个用于标记页面的属性，方便 LayoutWebsite 使用
+      // 传递假数据，但属性名要和 LayoutWebsite 预期接收的一致
+      allSites: MOCK_SITES,
+      allCategories: MOCK_CATEGORIES,
       currentLayout: 'LayoutWebsite' 
     },
-    revalidate: 60 // 缓存时间60秒
+    // 即使是假数据，Next.js 也要处理缓存
+    revalidate: 1 
   }
 }
 
 // 2. 页面组件：它只是接收数据，然后交给 LayoutWebsite 渲染
 const WebsitePage = (props) => {
-    // props 中现在包含了 allSites 和 allCategories
     return <LayoutWebsite {...props} /> 
 }
 
