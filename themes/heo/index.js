@@ -1,3 +1,5 @@
+// themes/heo/index.js 完整代码 (已修复)
+
 /**
  * HEO 主题说明
  * > 主题设计者 [张洪](https://zhheo.com/)
@@ -67,7 +69,7 @@ const LayoutWebsite = props => {
         <LayoutBase {...props} className="sites-page-container"> 
             
             {/* 新增的包裹容器：让你的左右布局生效，并作为 LayoutBase 的 children */}
-            <div className="flex w-full"> 
+            <div className="flex w-full min-h-[calc(100vh-100px)] lg:border rounded-2xl bg-white dark:bg-[#18171d] dark:border-gray-600"> 
 
                 {/* 左侧：分类导航栏 */}
                 <div className="website-sidebar">
@@ -90,17 +92,17 @@ const LayoutWebsite = props => {
                     {/* 网站 Grid 布局 */}
                     <div className="website-grid">
                         {activeWebsites.map((site, index) => (
-                            <a 
+                            <SmartLink 
                                 key={index} 
                                 href={site.link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="website-card"
+                                // target="_blank" // SmartLink 已经处理了外部链接，不需要手动 target
+                                // rel="noopener noreferrer"
+                                className="website-card" // 👈 这里的 class 是关键，确保它存在于 style.js
                             >
                                 {/* 网站名称、Logo、描述等信息 */}
                                 <div className="font-semibold dark:text-white">{site.title}</div>
                                 <div className="text-sm text-gray-500 mt-1">{site.desc}</div>
-                            </a>
+                            </SmartLink>
                         ))}
                     </div>
                 </div>
@@ -125,29 +127,30 @@ const LayoutBase = props => {
   const { fullWidth, isDarkMode } = useGlobal()
   const router = useRouter()
   
-  // 【修改点 A - 新增代码】关键判断：检查 className 中是否包含 'sites-page-container'
+  // 【关键修改 A】判断是否是网站导航页
   const isSitesPage = className && className.includes('sites-page-container')
 
-  const headerSlot = (
+  // 【关键修改 B】控制顶部的 NoticeBar 和 Hero
+  let headerSlot = (
     <header>
       {/* 顶部导航 */}
       <Header {...props} />
 
-      {/* 通知横幅 */}
-      {router.route === '/' ? (
+      {/* 通知横幅 和 Hero (Hero包含第一个用户信息卡片) */}
+      {!isSitesPage && router.route === '/' ? ( // 仅在首页且不是 sites 页面时显示 NoticeBar/Hero
         <>
           <NoticeBar />
           <Hero {...props} />
         </>
       ) : null}
+      
       {fullWidth ? null : <PostHeader {...props} isDarkMode={isDarkMode} />}
     </header>
   )
-
-  // 【修改点 A - 逻辑修改】右侧栏 用户信息+标签列表
-  // 只有在不是网站导航页时才渲染 slotRight (当 isSitesPage 为 true 时，slotRight 为 null)
+  
+  // 【关键修改 C】控制右侧栏 (SideRight包含第二个用户信息卡片)
   const slotRight =
-    router.route === '/404' || fullWidth || isSitesPage ? null : <SideRight {...props} />
+    router.route === '/404' || fullWidth || isSitesPage ? null : <SideRight {...props} /> // sites 页面禁用右侧栏
 
   const maxWidth = fullWidth ? 'max-w-[96rem] mx-auto' : 'max-w-[86rem]' // 普通最大宽度是86rem和顶部菜单栏对齐，留空则与窗口对齐
 
@@ -203,7 +206,6 @@ const LayoutBase = props => {
     </div>
   )
 }
-
 
 // =================================================================
 // ⬇️ 【重要】步骤 1：定义分类和布局的映射表
