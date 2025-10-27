@@ -45,14 +45,9 @@ import { Style } from './style'
 import AISummary from '@/components/AISummary'
 import ArticleExpirationNotice from '@/components/ArticleExpirationNotice'
 
-/**
- * 网站导航页面布局
- * @param props 接收来自 /pages/sites.js 的数据
- * @returns {JSX.Element}
- */
 const LayoutWebsite = props => {
     // 1. 从 props 中解构出你需要的数据
-    const { allSites, allCategories } = props 
+    const { allSites, allCategories } = props
     
     // 2. 状态：控制当前选中的分类 (默认为第一个分类)
     const [activeCategory, setActiveCategory] = useState(allCategories[0]);
@@ -60,48 +55,51 @@ const LayoutWebsite = props => {
     // 3. 过滤：根据选中的分类过滤网站列表
     const activeWebsites = allSites.filter(site => site.category === activeCategory) || [];
     
-    // ... (保持你之前定义的 cardCSS 或将其移到 CSS 文件中)
-
     return (
-        // 使用 LayoutBase 作为页面的基础框架
-        <LayoutBase {...props} className="flex-row">
+        // 关键修改：添加 'sites-page-container' 作为标识符
+        // 注意：将 LayoutBase 的 className 属性保留，不覆盖，以确保 LayoutBase 内部能够识别
+        <LayoutBase {...props} className="sites-page-container"> 
             
-            {/* 你的 CSS 样式区域 (为了简化，这里省略) */}
+            {/* 新增的包裹容器：让你的左右布局生效，并作为 LayoutBase 的 children */}
+            <div className="flex w-full"> 
 
-            {/* 左侧：分类导航栏 */}
-            <div className="website-sidebar">
-                {allCategories.map(catName => ( // 遍历所有分类名称
-                    <div
-                        key={catName}
-                        className={`tab-item ${activeCategory === catName ? 'active' : ''}`}
-                        onClick={() => setActiveCategory(catName)} // 点击切换
-                    >
-                        {catName}
-                    </div>
-                ))}
-            </div>
-
-            {/* 右侧：网站卡片内容区 */}
-            <div className="flex-grow p-10">
-                <h2 className="text-xl font-bold mb-5">{activeCategory} 网站列表</h2>
-                
-                {/* 网站 Grid 布局 */}
-                <div className="website-grid">
-                    {activeWebsites.map((site, index) => (
-                        <a 
-                            key={index} 
-                            href={site.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="website-card"
+                {/* 左侧：分类导航栏 */}
+                <div className="website-sidebar">
+                    {allCategories.map(catName => ( // 遍历所有分类名称
+                        <div
+                            key={catName}
+                            className={`tab-item ${activeCategory === catName ? 'active' : ''}`}
+                            onClick={() => setActiveCategory(catName)} // 点击切换
                         >
-                            {/* 网站名称、Logo、描述等信息 */}
-                            <div className="font-semibold">{site.title}</div>
-                            <div className="text-sm text-gray-500 mt-1">{site.desc}</div>
-                        </a>
+                            {catName}
+                        </div>
                     ))}
                 </div>
-            </div>
+
+                {/* 右侧：网站卡片内容区 */}
+                <div className="flex-grow p-10">
+                    {/* 使用 Tailwind 类名确保标题在暗黑模式下可见 */}
+                    <h2 className="text-xl font-bold mb-5 dark:text-white">{activeCategory} 网站列表</h2> 
+                    
+                    {/* 网站 Grid 布局 */}
+                    <div className="website-grid">
+                        {activeWebsites.map((site, index) => (
+                            <a 
+                                key={index} 
+                                href={site.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="website-card"
+                            >
+                                {/* 网站名称、Logo、描述等信息 */}
+                                <div className="font-semibold dark:text-white">{site.title}</div>
+                                <div className="text-sm text-gray-500 mt-1">{site.desc}</div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+                
+            </div> {/* 结束自定义包裹容器 */}
             
         </LayoutBase>
     );
@@ -119,6 +117,10 @@ const LayoutBase = props => {
   // 全屏模式下的最大宽度
   const { fullWidth, isDarkMode } = useGlobal()
   const router = useRouter()
+  
+  // 【新增代码】关键判断：检查 className 中是否包含 'sites-page-container'
+  // 这是 LayoutWebsite 组件传递给 LayoutBase 的标识符
+  const isSitesPage = className && className.includes('sites-page-container')
 
   const headerSlot = (
     <header>
@@ -135,6 +137,66 @@ const LayoutBase = props => {
       {fullWidth ? null : <PostHeader {...props} isDarkMode={isDarkMode} />}
     </header>
   )
+
+  // 【修改代码】右侧栏 用户信息+标签列表
+  // 只有在不是网站导航页时才渲染 slotRight
+  const slotRight =
+    router.route === '/404' || fullWidth || isSitesPage ? null : <SideRight {...props} />
+
+  const maxWidth = fullWidth ? 'max-w-[96rem] mx-auto' : 'max-w-[86rem]' // 普通最大宽度是86rem和顶部菜单栏对齐，留空则与窗口对齐
+
+  const HEO_HERO_BODY_REVERSE = siteConfig(
+    'HEO_HERO_BODY_REVERSE',
+    false,
+    CONFIG
+  )
+  const HEO_LOADING_COVER = siteConfig('HEO_LOADING_COVER', true, CONFIG)
+
+  // 加载wow动画
+  useEffect(() => {
+    loadWowJS()
+  }, [])
+
+  return (
+    <div
+      id='theme-heo'
+      className={`${siteConfig('FONT_STYLE')} bg-[#f7f9fe] dark:bg-[#18171d] h-full min-h-screen flex flex-col scroll-smooth`}>
+      <Style />
+
+      {/* 顶部嵌入 导航栏，首页放hero，文章页放文章详情 */}
+      {headerSlot}
+
+      {/* 主区块 */}
+      <main
+        id='wrapper-outer'
+        className={`flex-grow w-full ${maxWidth} mx-auto relative md:px-5`}>
+        <div
+          id='container-inner'
+          className={`${HEO_HERO_BODY_REVERSE ? 'flex-row-reverse' : ''} w-full mx-auto lg:flex justify-center relative z-10`}>
+          <div className={`w-full h-auto ${className || ''}`}>
+            {/* 主区上部嵌入 */}
+            {slotTop}
+            {/* 【注意】children 在 LayoutWebsite 中已经包含了你自定义的左右布局 */}
+            {children}
+          </div>
+
+          <div className='lg:px-2'></div>
+
+          <div className='hidden xl:block'>
+            {/* 主区快右侧 */}
+            {/* 这里受上面 slotRight 的控制，sites 页面不会渲染 */}
+            {slotRight}
+          </div>
+        </div>
+      </main>
+
+      {/* 页脚 */}
+      <Footer />
+
+      {HEO_LOADING_COVER && <LoadingCover />}
+    </div>
+  )
+}
 
   // 右侧栏 用户信息+标签列表
   const slotRight =
