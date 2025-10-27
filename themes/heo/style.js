@@ -14,7 +14,14 @@ const Style = () => {
       /* ------------------------------------------------------------- */
       /* LayoutWebsite 的自定义样式 */
       /* ------------------------------------------------------------- */
-
+      
+      /* **网站布局容器**：移除边框并确保占据全宽 */
+      .sites-page-container > .flex.w-full {
+          /* 移除 LayoutWebsite 上的默认边框 */
+          border: none !important;
+          max-width: none !important; 
+      }
+      
       /* 左侧边栏容器样式 */
       .website-sidebar {
         /* 基础布局 */
@@ -29,7 +36,7 @@ const Style = () => {
       /* 黑暗模式：website-sidebar 容器 */
       .dark .website-sidebar {
         background-color: #2c2d30;
-        border-color: #4b5563; /* dark:border-gray-600 */
+        border-color: #4b5563; 
       }
 
       /* 左侧导航项（分类）样式 */
@@ -39,17 +46,17 @@ const Style = () => {
         padding: 10px 20px;
         font-size: 16px;
         transition: all 0.2s;
-        color: #1f2937; /* 亮色默认文本颜色 */
+        color: #1f2937; 
       }
 
       /* 黑暗模式：导航项文本颜色 */
       .dark .website-sidebar .tab-item {
-        color: #d1d5db; /* dark:text-gray-300 */
+        color: #d1d5db; 
       }
 
       /* 左侧导航项 Hover 效果 */
       .website-sidebar .tab-item:hover {
-        background-color: #f0f2f5; /* Hover 背景色 */
+        background-color: #f0f2f5; 
       }
 
       /* 黑暗模式：导航项 Hover 效果 */
@@ -61,19 +68,19 @@ const Style = () => {
       .website-sidebar .tab-item.active {
         /* 重点：高亮样式 */
         font-weight: bold;
-        color: #4f46e5; /* 紫色高亮 */
-        background-color: #eef2ff; /* 浅紫色背景 */
+        color: #4f46e5; 
+        background-color: #eef2ff; 
         border-left: 4px solid #4f46e5;
       }
 
       /* 黑暗模式：导航项 Active 状态样式 */
       .dark .website-sidebar .tab-item.active {
-        color: #818cf8; /* dark:text-indigo-400 */
+        color: #818cf8; 
         background-color: #3d3f44;
       }
 
 
-      /* **网站卡片 Grid 容器样式** (修复卡片丢失样式的问题) */
+      /* **网站卡片 Grid 容器样式** */
       .website-grid {
         display: grid;
         /* 自动适应列数，最小宽度 180px */
@@ -82,53 +89,42 @@ const Style = () => {
         padding: 0;
       }
 
-      /* **网站卡片链接样式** (修复卡片丢失样式的问题) */
+      /* **网站卡片链接样式** - 使用 !important 强制覆盖 */
       .website-card {
-        /* 确保卡片是块级元素 */
-        display: block;
-        padding: 16px;
-        border-radius: 12px;
-        transition: all 0.2s;
-        text-decoration: none; /* 去掉链接下划线 */
-        /* 卡片背景和边框 */
-        background-color: #ffffff;
-        border: 1px solid #e5e7eb;
-        /* 确保字体颜色继承正确 */
-        color: #1f2937; 
-        /* 避免被父级影响 */
-        min-height: 80px; 
+        display: block !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+        transition: all 0.2s !important;
+        text-decoration: none !important; 
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        color: #1f2937 !important; 
+        min-height: 80px !important; 
       }
 
       /* 黑暗模式：网站卡片 */
       .dark .website-card {
-        background-color: #2c2d30;
-        border-color: #4b5563;
-        color: #d1d5db; /* 确保卡片内文本在暗黑模式可见 */
+        background-color: #2c2d30 !important;
+        border-color: #4b5563 !important;
+        color: #d1d5db !important; 
       }
-
+      
       /* 网站卡片 Hover 效果 */
       .website-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px); /* 轻微上浮 */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        transform: translateY(-2px) !important; 
       }
 
       /* 黑暗模式：卡片 Hover 边框高亮 */
       .dark .website-card:hover {
-         border-color: #818cf8; /* dark:hover:border-indigo-400 */
+         border-color: #818cf8 !important; 
       }
 
       /* ------------------------------------------------------------- */
       /* 【重点】强制隐藏 sites 页面上的多余元素和布局残留 */
       /* ------------------------------------------------------------- */
 
-      /* 隐藏左侧图标导航栏 (HEO主题默认) - 针对 image_30a9bb.jpg 的左侧列图标 */
-      #theme-heo #wrapper-outer + header + .w-full.relative:first-child,
-      #theme-heo #wrapper-outer + header + .w-full.relative > div:first-child,
-      #theme-heo #container-inner > .w-full:first-child > .w-full:first-child {
-          display: none !important;
-      }
-      
-      /* 隐藏 LayoutBase 内部的默认右侧栏 SideRight 及其相关卡片（针对 image_ad8959.png 的右侧黑洞）*/
+      /* 隐藏 LayoutBase 内部的默认右侧栏 SideRight 及其相关卡片（中间和右侧的黑洞/卡片）*/
       #container-inner > .lg\\:px-2, /* 移除中间的间隔 */
       #container-inner > .hidden.xl\\:block { /* 移除右侧栏容器 */
           display: none !important;
